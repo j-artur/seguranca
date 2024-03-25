@@ -1,0 +1,1 @@
+javac -cp src -d bin src/server/Server.java src/client/GoodClient.java src/client/BadClient.java
