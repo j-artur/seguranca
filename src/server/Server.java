@@ -41,6 +41,16 @@ public class Server implements Runnable {
 
   public Server() {
     this.users = new ArrayList<User>();
+
+    this.users
+        .add(new User("123", "123", "João", "Rua 1", "123456789"));
+    this.users
+        .add(new User("456", "456", "Maria", "Rua 2", "987654321"));
+    this.users
+        .add(new User("789", "789", "José", "Rua 3", "123123123"));
+    this.users
+        .add(new User("000", "000", "Ana", "Rua 4", "456456456"));
+
     this.security = new Security(hmacKey);
   }
 
@@ -55,8 +65,6 @@ public class Server implements Runnable {
         String message = receiveMessage();
 
         Dbg.log(Color.GREEN_BRIGHT, message);
-
-        System.out.println(message == null ? "null" : "tem");
 
         String[] parts = message.split("@");
         String route = parts[0];

@@ -32,8 +32,7 @@ public class Client implements Runnable {
       address = InetAddress.getByName("localhost");
       Dbg.log(Color.CYAN, "Cliente online em: " + address + ":" + clientSocket.getLocalPort());
       while (active) {
-        Dbg.log(Color.BLUE, "*** Bem-vindo ao banco ***");
-        Dbg.log(Color.BLUE, "***--------------------***");
+        Dbg.log(Color.BLUE, "*** Serviço bancário ***");
 
         if (signedInCpf == null) {
           Dbg.log(Color.BLUE, "|1| Entrar");
