@@ -62,15 +62,15 @@ public class Server implements Runnable {
       Dbg.log(Color.BLUE, "Server has started at: " + host + ":" + PORT);
 
       while (true) {
-        String message = receiveMessage();
-
-        Dbg.log(Color.GREEN_BRIGHT, message);
-
-        String[] parts = message.split("@");
-        String route = parts[0];
-        String[] params = parts[1].split(":");
-
         try {
+          String message = receiveMessage();
+
+          Dbg.log(Color.GREEN_BRIGHT, message);
+
+          String[] parts = message.split("@");
+          String route = parts[0];
+          String[] params = parts[1].split(":");
+
           Action action = Action.valueOf(route);
 
           switch (action) {
@@ -198,7 +198,7 @@ public class Server implements Runnable {
       return security.decrypt(new String(receiveBuffer));
     } catch (Exception e) {
       Dbg.log(Color.RED, e.getMessage());
-      return null;
+      throw e;
     }
   }
 }
