@@ -180,7 +180,7 @@ public class Client implements Runnable {
       }
     } while (account == null);
 
-    String value = dbg.input(Color.BLUE, "Digite o valor:\n");
+    String value = dbg.input(Color.BLUE, "Digite o valor em centavos:\n");
 
     String response = sendMessage(Action.Withdraw, new String[] { signedInCpf, account.toString(), value });
 
@@ -223,7 +223,7 @@ public class Client implements Runnable {
       }
     } while (account == null);
 
-    String value = dbg.input(Color.BLUE, "Digite o valor:\n");
+    String value = dbg.input(Color.BLUE, "Digite o valor em centavos:\n");
 
     String response = sendMessage(Action.Deposit, new String[] { signedInCpf, account.toString(), value });
 
@@ -236,7 +236,7 @@ public class Client implements Runnable {
   private void transfer() throws Exception {
     Dbg.log(Color.BLUE, "*** Transferência ***");
     String destinationCpf = dbg.input(Color.BLUE, "Digite o cpf da conta de destino:\n");
-    String value = dbg.input(Color.BLUE, "Digite o valor:\n");
+    String value = dbg.input(Color.BLUE, "Digite o valor em centavos:\n");
 
     String response = sendMessage(Action.Transfer, new String[] { signedInCpf, destinationCpf, value });
 
