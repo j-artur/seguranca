@@ -43,13 +43,13 @@ public class Server implements Runnable {
     this.users = new ArrayList<User>();
 
     this.users
-        .add(new User("123", "123", "João", "Rua 1", "123456789"));
+        .add(new User("123", "123", "João", "Rua 1", "123456789", 100000));
     this.users
-        .add(new User("456", "456", "Maria", "Rua 2", "987654321"));
+        .add(new User("456", "456", "Maria", "Rua 2", "987654321", 100000));
     this.users
-        .add(new User("789", "789", "José", "Rua 3", "123123123"));
+        .add(new User("789", "789", "José", "Rua 3", "123123123", 100000));
     this.users
-        .add(new User("000", "000", "Ana", "Rua 4", "456456456"));
+        .add(new User("000", "000", "Ana", "Rua 4", "456456456", 100000));
 
     this.security = new Security(hmacKey);
   }

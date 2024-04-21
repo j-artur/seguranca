@@ -21,6 +21,17 @@ public class User {
     this.fixedIncomeBalance = 0;
   }
 
+  public User(String cpf, String password, String name, String address, String phone, Integer checkingBalance) {
+    this.cpf = cpf;
+    this.password = password;
+    this.name = name;
+    this.address = address;
+    this.phone = phone;
+    this.checkingBalance = checkingBalance;
+    this.savingsBalance = 0;
+    this.fixedIncomeBalance = 0;
+  }
+
   public Integer getCheckingBalance() {
     return this.checkingBalance;
   }
