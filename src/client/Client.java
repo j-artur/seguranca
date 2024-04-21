@@ -10,6 +10,8 @@ import lib.Account;
 import lib.Action;
 import lib.Dbg;
 import lib.Dbg.Color;
+import security.AES;
+import security.HMAC;
 import security.KeyPair;
 import security.Keys;
 import security.RSA;
@@ -25,8 +27,13 @@ public class Client implements Runnable {
   private Keys serverKeys;
   private KeyPair rsaKeys;
   private Dbg dbg = new Dbg();
+  private boolean attackMode = false;
 
   public Client() {
+  }
+
+  public Client(boolean attackMode) {
+    this.attackMode = attackMode;
   }
 
   @Override
@@ -336,10 +343,15 @@ public class Client implements Runnable {
 
     String[] parts = response.split(";");
 
-    SecretKey hmacKey = Keys.hmacFromString(parts[0]);
-    SecretKey aesKey = Keys.aesFromString(parts[1]);
-
-    return new Keys(hmacKey, aesKey, serverPublicKey);
+    if (attackMode) {
+      SecretKey hmacKey = HMAC.generateKey();
+      SecretKey aesKey = AES.generateKey();
+      return new Keys(hmacKey, aesKey, serverPublicKey);
+    } else {
+      SecretKey hmacKey = Keys.hmacFromString(parts[0]);
+      SecretKey aesKey = Keys.aesFromString(parts[1]);
+      return new Keys(hmacKey, aesKey, serverPublicKey);
+    }
   }
 
   private String display(int value) {

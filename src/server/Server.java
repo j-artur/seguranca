@@ -51,13 +51,11 @@ public class Server implements Runnable {
     this.users = new ArrayList<User>();
 
     this.users
-        .add(new User("123", "123", "João", "Rua 1", "123456789"));
+        .add(new User("123", "123", "João", "Rua 1", "123456789", 100000));
     this.users
-        .add(new User("456", "456", "Maria", "Rua 2", "987654321"));
+        .add(new User("456", "456", "Maria", "Rua 2", "987654321", 100000));
     this.users
-        .add(new User("789", "789", "José", "Rua 3", "123123123"));
-    this.users
-        .add(new User("000", "000", "Ana", "Rua 4", "456456456"));
+        .add(new User("789", "789", "José", "Rua 3", "123123123", 100000));
 
     this.clientKeys = new Hashtable<String, Keys>();
   }
@@ -72,15 +70,15 @@ public class Server implements Runnable {
       Dbg.log(Color.BLUE, "Server has started at: " + host + ": " + PORT);
 
       while (true) {
-        ServerMessage message = receiveMessage();
-
-        Dbg.log(Color.BLUE, "Received message from " + message.port() + ": " + message.message());
-
-        String[] parts = message.message().trim().split("@");
-        String route = parts[0];
-        String[] params = parts.length > 1 ? parts[1].split(";") : new String[0];
-
         try {
+          ServerMessage message = receiveMessage();
+
+          Dbg.log(Color.BLUE, "Received message from " + message.port() + ": " + message.message());
+
+          String[] parts = message.message().trim().split("@");
+          String route = parts[0];
+          String[] params = parts.length > 1 ? parts[1].split(";") : new String[0];
+
           Action action = Action.valueOf(route);
 
           switch (action) {
@@ -115,7 +113,7 @@ public class Server implements Runnable {
               continue;
           }
         } catch (Exception e) {
-          sendMessage("error@Ação inválida", message.port());
+          sendMessage("error@Ação inválida", String.valueOf(receiveDatagram.getPort()));
           continue;
         }
       }
@@ -262,7 +260,7 @@ public class Server implements Runnable {
       return new ServerMessage(Security.decrypt(message, keys), port);
     } catch (Exception e) {
       Dbg.log(Color.RED, e.getMessage());
-      return null;
+      throw e;
     }
   }
 }
