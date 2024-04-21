@@ -343,7 +343,7 @@ public class Client implements Runnable {
   }
 
   private String display(int value) {
-    return "R$ " + String.format("%,.2f", value / 100.0);
+    return "R$ " + String.format("%,.2f", value / 100.0).replace(",", "-").replace(".", ",").replace("-", ".");
   }
 
   private int yieldSimulation(int value, int months, float rate) {
