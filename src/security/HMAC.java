@@ -1,7 +1,10 @@
 package security;
 
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.SecretKey;
 
 public class HMAC {
   public static final String ALG = "HmacSHA256";
@@ -9,12 +12,14 @@ public class HMAC {
   // public static final String ALG = "HmacSHA384";
   // public static final String ALG = "HmacSHA512";
 
-  public static String encrypt(String key, String message) throws Exception {
+  public static SecretKey generateKey() throws NoSuchAlgorithmException {
+    var keyGenerator = KeyGenerator.getInstance("HmacSHA256");
+    return keyGenerator.generateKey();
+  }
+
+  public static String encrypt(String message, SecretKey key) throws Exception {
     Mac shaHMAC = Mac.getInstance(ALG);
-    SecretKeySpec MACKey = new SecretKeySpec(
-        key.getBytes("UTF-8"),
-        ALG);
-    shaHMAC.init(MACKey);
+    shaHMAC.init(key);
     byte[] bytesHMAC = shaHMAC
         .doFinal(message.getBytes("UTF-8"));
     return byte2Hex(bytesHMAC);

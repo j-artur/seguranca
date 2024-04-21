@@ -4,33 +4,42 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+import javax.crypto.SecretKey;
+
 import lib.Account;
 import lib.Action;
 import lib.Dbg;
 import lib.Dbg.Color;
-import server.Security;
+import security.KeyPair;
+import security.Keys;
+import security.RSA;
+import security.RSAKey;
+import security.Security;
 import server.Server;
 
 public class Client implements Runnable {
   private boolean active = true;
   private DatagramSocket clientSocket = null;
   private InetAddress address;
-  private byte[] sendBuffer;
-  private byte[] receiveBuffer;
   private String signedInCpf = null;
-  private Security security;
-  Dbg dbg = new Dbg();
+  private Keys serverKeys;
+  private KeyPair rsaKeys;
+  private Dbg dbg = new Dbg();
 
-  public Client(String hmacKey) {
-    security = new Security(hmacKey);
+  public Client() {
   }
 
   @Override
   public void run() {
     try {
+      rsaKeys = RSA.generateKeys();
+
       clientSocket = new DatagramSocket();
       address = InetAddress.getByName("localhost");
-      Dbg.log(Color.CYAN, "Cliente online em: " + address + ":" + clientSocket.getLocalPort());
+
+      serverKeys = getServerKeys();
+
+      Dbg.log(Color.CYAN, "Cliente online em: " + address + ": " + clientSocket.getLocalPort());
       while (active) {
         Dbg.log(Color.BLUE, "*** Serviço bancário ***");
 
@@ -248,14 +257,7 @@ public class Client implements Runnable {
 
     String response = sendMessage(Action.Investments, new String[] { signedInCpf });
 
-    try {
-      response = security.decrypt(new String(receiveBuffer));
-    } catch (Exception e) {
-      Dbg.log(Color.RED, e.getMessage());
-      return;
-    }
-
-    String[] parts = response.split(":");
+    String[] parts = response.split(";");
 
     int savings = Integer.parseInt(parts[0]);
     int fixed = Integer.parseInt(parts[1]);
@@ -281,24 +283,63 @@ public class Client implements Runnable {
   }
 
   private String sendMessage(Action action, String[] params) throws Exception {
-    sendBuffer = new byte[1024];
-    String msg = security.encrypt(action + "@" + String.join(":", params));
-    sendBuffer = msg.getBytes();
+    String msg = Security.encrypt(action + "@" + String.join(";", params), serverKeys, rsaKeys.privateKey());
+    byte[] sendBuffer = msg.getBytes();
     DatagramPacket sendDatagram = new DatagramPacket(sendBuffer, sendBuffer.length, address, Server.PORT);
 
     clientSocket.send(sendDatagram);
 
-    receiveBuffer = new byte[1024];
+    byte[] receiveBuffer = new byte[16384];
 
     DatagramPacket receiveDatagram = new DatagramPacket(
         receiveBuffer,
         receiveBuffer.length);
     clientSocket.receive(receiveDatagram);
-    receiveBuffer = receiveDatagram.getData();
 
-    String response = security.decrypt(new String(receiveBuffer));
+    String response = Security.decrypt(new String(receiveDatagram.getData()), serverKeys);
 
     return response;
+  }
+
+  private Keys getServerKeys() throws Exception {
+    String msg = Action.GetPublicKey.toString();
+    byte[] sendBuffer = msg.getBytes();
+    DatagramPacket sendDatagram = new DatagramPacket(sendBuffer, sendBuffer.length, address, Server.PORT);
+
+    clientSocket.send(sendDatagram);
+
+    byte[] receiveBuffer = new byte[16384];
+
+    DatagramPacket receiveDatagram = new DatagramPacket(
+        receiveBuffer,
+        receiveBuffer.length);
+    clientSocket.receive(receiveDatagram);
+
+    String response = new String(receiveDatagram.getData()).trim();
+
+    RSAKey serverPublicKey = RSAKey.fromString(response);
+
+    msg = Security.encryptWithoutHash(Action.TradeKeys + "@" + rsaKeys.publicKey(), serverPublicKey);
+    sendBuffer = msg.getBytes();
+    sendDatagram = new DatagramPacket(sendBuffer, sendBuffer.length, address, Server.PORT);
+
+    clientSocket.send(sendDatagram);
+
+    receiveBuffer = new byte[16384];
+
+    receiveDatagram = new DatagramPacket(
+        receiveBuffer,
+        receiveBuffer.length);
+    clientSocket.receive(receiveDatagram);
+
+    response = Security.decryptWithoutHash(new String(receiveDatagram.getData()).trim(), rsaKeys.privateKey()).trim();
+
+    String[] parts = response.split(";");
+
+    SecretKey hmacKey = Keys.hmacFromString(parts[0]);
+    SecretKey aesKey = Keys.aesFromString(parts[1]);
+
+    return new Keys(hmacKey, aesKey, serverPublicKey);
   }
 
   private String display(int value) {
