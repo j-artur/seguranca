@@ -1,4 +1,4 @@
 package lib;
 
-public record ServerMessage(String message, String port) {
+public record ServerMessage(String message, Integer port) {
 }

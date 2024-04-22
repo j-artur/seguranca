@@ -32,7 +32,7 @@ public class Server implements Runnable {
   private DatagramPacket sendPacket;
   private KeyPair rsaKeys;
   private List<User> users;
-  private Hashtable<String, Keys> clientKeys;
+  private Hashtable<Integer, Keys> clientKeys;
 
   public static void main(String args[]) {
     Server server = new Server();
@@ -57,7 +57,7 @@ public class Server implements Runnable {
     this.users
         .add(new User("789", "789", "José", "Rua 3", "123123123", 100000));
 
-    this.clientKeys = new Hashtable<String, Keys>();
+    this.clientKeys = new Hashtable<Integer, Keys>();
   }
 
   @Override
@@ -113,7 +113,7 @@ public class Server implements Runnable {
               continue;
           }
         } catch (Exception e) {
-          sendMessage("error@Ação inválida", String.valueOf(receiveDatagram.getPort()));
+          sendMessage("error@Ação inválida", receiveDatagram.getPort());
           continue;
         }
       }
@@ -126,7 +126,7 @@ public class Server implements Runnable {
     }
   }
 
-  private void sendPublicKey(String port) throws Exception {
+  private void sendPublicKey(Integer port) throws Exception {
     String response = rsaKeys.publicKey().toString();
     byte[] sendBuffer = response.getBytes();
     sendPacket = new DatagramPacket(
@@ -138,7 +138,7 @@ public class Server implements Runnable {
     Dbg.log(Color.CYAN_BRIGHT, "Sending message to " + port + ": " + response);
   }
 
-  private void tradeKeys(String port, String publicKey) throws Exception {
+  private void tradeKeys(Integer port, String publicKey) throws Exception {
     RSAKey clientPublicKey = RSAKey.fromString(publicKey);
     SecretKey hmacKey = HMAC.generateKey();
     SecretKey aesKey = AES.generateKey();
@@ -163,7 +163,7 @@ public class Server implements Runnable {
 
   }
 
-  private void signIn(String cpf, String password, String port) throws Exception {
+  private void signIn(String cpf, String password, Integer port) throws Exception {
     Optional<User> user = users.stream().filter(u -> u.cpf.equals(cpf)).findFirst();
 
     if (user.isEmpty() || !user.get().password.equals(password)) {
@@ -173,20 +173,20 @@ public class Server implements Runnable {
     }
   }
 
-  private void signUp(String name, String cpf, String password, String address, String phone, String port)
+  private void signUp(String name, String cpf, String password, String address, String phone, Integer port)
       throws Exception {
     users.add(new User(cpf, password, name, address, phone));
 
     sendMessage("true", port);
   }
 
-  private void balance(String cpf, String port) throws Exception {
+  private void balance(String cpf, Integer port) throws Exception {
     User user = users.stream().filter(u -> u.cpf.equals(cpf)).findFirst().orElseThrow();
 
     sendMessage(user.getCheckingBalance().toString(), port);
   }
 
-  private void withdraw(String cpf, Account account, int value, String port) throws Exception {
+  private void withdraw(String cpf, Account account, int value, Integer port) throws Exception {
     User user = users.stream().filter(u -> u.cpf.equals(cpf)).findFirst().orElseThrow();
 
     try {
@@ -197,14 +197,14 @@ public class Server implements Runnable {
     }
   }
 
-  private void deposit(String cpf, Account account, int value, String port) throws Exception {
+  private void deposit(String cpf, Account account, int value, Integer port) throws Exception {
     User user = users.stream().filter(u -> u.cpf.equals(cpf)).findFirst().orElseThrow();
 
     user.deposit(account, value);
     sendMessage(user.getCheckingBalance().toString(), port);
   }
 
-  private void transfer(String cpf, String targetCpf, int value, String port) throws Exception {
+  private void transfer(String cpf, String targetCpf, int value, Integer port) throws Exception {
     User user = users.stream().filter(u -> u.cpf.equals(cpf)).findFirst().orElseThrow();
     Optional<User> targetUser = users.stream().filter(u -> u.cpf.equals(targetCpf)).findFirst();
 
@@ -216,7 +216,7 @@ public class Server implements Runnable {
     }
   }
 
-  private void investments(String cpf, String port) throws Exception {
+  private void investments(String cpf, Integer port) throws Exception {
     User user = users.stream().filter(u -> u.cpf.equals(cpf)).findFirst().orElseThrow();
 
     int savings = user.getSavingsBalance();
@@ -225,7 +225,7 @@ public class Server implements Runnable {
     sendMessage(savings + ";" + fixed, port);
   }
 
-  private void sendMessage(String message, String port) throws Exception {
+  private void sendMessage(String message, Integer port) throws Exception {
     Keys keys = clientKeys.get(port);
     if (keys == null) {
       Dbg.log(Color.RED, "Client keys not found for client in port " + port);
@@ -248,7 +248,7 @@ public class Server implements Runnable {
     receiveDatagram = new DatagramPacket(receiveBuffer, receiveBuffer.length);
     socket.receive(receiveDatagram);
 
-    String port = String.valueOf(receiveDatagram.getPort());
+    Integer port = receiveDatagram.getPort();
     String message = new String(receiveDatagram.getData()).trim();
 
     if (!clientKeys.containsKey(port)) {
