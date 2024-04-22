@@ -326,6 +326,13 @@ public class Client implements Runnable {
 
     RSAKey serverPublicKey = RSAKey.fromString(response);
 
+    if (attackMode) {
+      SecretKey hmacKey = HMAC.generateKey();
+      SecretKey aesKey = AES.generateKey();
+
+      return new Keys(hmacKey, aesKey, serverPublicKey);
+    }
+
     msg = Security.encryptWithoutHash(Action.TradeKeys + "@" + rsaKeys.publicKey(), serverPublicKey);
     sendBuffer = msg.getBytes();
     sendDatagram = new DatagramPacket(sendBuffer, sendBuffer.length, address, Server.PORT);
@@ -343,15 +350,10 @@ public class Client implements Runnable {
 
     String[] parts = response.split(";");
 
-    if (attackMode) {
-      SecretKey hmacKey = HMAC.generateKey();
-      SecretKey aesKey = AES.generateKey();
-      return new Keys(hmacKey, aesKey, serverPublicKey);
-    } else {
-      SecretKey hmacKey = Keys.hmacFromString(parts[0]);
-      SecretKey aesKey = Keys.aesFromString(parts[1]);
-      return new Keys(hmacKey, aesKey, serverPublicKey);
-    }
+    SecretKey hmacKey = Keys.hmacFromString(parts[0]);
+    SecretKey aesKey = Keys.aesFromString(parts[1]);
+    return new Keys(hmacKey, aesKey, serverPublicKey);
+
   }
 
   private String display(int value) {

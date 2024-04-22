@@ -227,6 +227,10 @@ public class Server implements Runnable {
 
   private void sendMessage(String message, String port) throws Exception {
     Keys keys = clientKeys.get(port);
+    if (keys == null) {
+      Dbg.log(Color.RED, "Client keys not found for client in port " + port);
+      return;
+    }
 
     Dbg.log(Color.CYAN_BRIGHT, "Sending message to " + port + ": " + message);
     String response = Security.encrypt(message, keys, rsaKeys.privateKey());
