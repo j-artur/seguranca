@@ -255,8 +255,7 @@ public class Server implements Runnable {
       if (message.equals(Action.GetPublicKey.toString()))
         return new ServerMessage(message, port);
 
-      return new ServerMessage(Security.decryptWithoutHash(message,
-          rsaKeys.privateKey()), port);
+      return new ServerMessage(Security.decryptWithoutHash(message, rsaKeys.privateKey()), port);
     }
 
     try {
